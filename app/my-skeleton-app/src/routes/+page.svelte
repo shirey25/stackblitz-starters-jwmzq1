@@ -21,10 +21,7 @@ const client = new Client()
 
 const account = new Account(client);
 
-const promise = account.create(
-    ID.unique(),
-    'team@appwrite.io',
-    'password'
+   
 );
 
 promise.then(function (response) {
@@ -33,9 +30,6 @@ promise.then(function (response) {
     console.log(error);
 });
   
-
-account.createOAuth2Session('google', 'facebook');
-
 
   const contactStore = localStorageStore<Contact[]>("contactStore", []);
 
