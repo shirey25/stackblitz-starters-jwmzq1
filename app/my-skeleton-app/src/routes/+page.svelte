@@ -15,14 +15,17 @@
 	let password = "";
 
 
-const client = new Client()
-    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('64749decd0dbb1e27c93');               // Your project ID
+const sdk = require ('appwrite');
+let client = new sdk.Client();
+client
+    setEndpoint('https://cloud.appwrite.io/v1'); // Your API Endpoint
+    setProject('64749decd0dbb1e27c93');
+    setKey('737d67b239611e525f7ff57d2d17d95b5310906971643bbfc564f223eb705434f6884f96fe4cbdcf1a79efcf2cbbd90365fd9a1a497ab0cd1220756702ae4db1cdac0731c57ccff2d7889c3e44030355bb3f6ec19be9cb7e27c92e142c5ec3e078f47f256493ca45ffb0f2d2598789875a74c76f4abc07679309482fb901d898')               // Your project ID
 
-const account = new Account(client);
+
 
    
-);
+
 
 promise.then(function (response) {
     console.log(response);
