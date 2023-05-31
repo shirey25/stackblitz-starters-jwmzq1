@@ -1,80 +1,126 @@
 <script lang="ts">
-	import { localStorageStore } from "@skeletonlabs/skeleton" // Backs up our data
-	import type { Writable } from "svelte/store" // Handles our data
+  import { Client, Account, ID } from "appwrite";
+  import { localStorageStore } from "@skeletonlabs/skeleton";
+  import { writable } from "svelte/store";
 
-	// Writable
-	// Read / Write from throughout our application
-	// Writable needs a type
-	/*  Writable 
-		[
-			{ name: "Cooper", phoneNumber: "(123) 123 - 1234" }
-		]
-	*/
+  interface Contact {
+    name: string;
+    phoneNumber: string;
+  }
 
-	let inputName = "";
-	let inputPhoneNumber = "";
+  let inputName = "";
+	let email = "";
+  let inputPhoneNumber = "";
+  let isLoggedIn = false;
+	let password = "";
 
-	interface Contact {
-		name: string
-		phoneNumber: string
-	}
 
-	// "contacts" = Contact[]
-	const contactStore: Writable<Contact[]> = localStorageStore("contactStore", []);
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('64749decd0dbb1e27c93');               // Your project ID
 
-	// contactStore is a writable which holds an array of contacts
-	// $contactStore 
-	// contactStore is the writable object (subscribe, delete, change value)
-	// $contactStore is how you get the VALUE of your store
+const account = new Account(client);
 
-	function addContact() {
-		// $contactStore = [ cooper, peter ]   ...[cooper, peter] = cooper, peter
-		// [bob, ...[cooper, peter] ] = [bob, cooper, peter]
+const promise = account.create(
+    ID.unique(),
+    'team@appwrite.io',
+    'password'
+);
 
-		$contactStore = [
-			{
-				name: inputName,
-				phoneNumber: inputPhoneNumber
-			},
-			...$contactStore
-		]
-	}
+promise.then(function (response) {
+    console.log(response);
+}, function (error) {
+    console.log(error);
+});
+  
 
-	function deleteContact(index: number) {
-		// [bob, cooper, peter]
-		// 1
-		// bob 0 !== 1 TRUE
-		// cooper 1 !== 1 FALSE
-		// peter 2 !== 1 TRUE
+account.createOAuth2Session('google', 'facebook');
 
-		// $contactStore = [bob, peter]
 
-		$contactStore = $contactStore.filter((contact, contactIndex) => contactIndex !== index);
-	}
+  const contactStore = localStorageStore<Contact[]>("contactStore", []);
 
+  function addContact() {
+    const newContact: Contact = {
+      name: inputName,
+      phoneNumber: inputPhoneNumber,
+    };
+
+    contactStore.set([newContact, ...contactStore.get()]);
+    clearInput();
+  }
+
+  function deleteContact(index: number) {
+    const contacts = contactStore.get().filter((_, i) => i !== index);
+    contactStore.set(contacts);
+  }
+
+  function clearInput() {
+    inputName = "";
+    inputPhoneNumber = "";
+  }
+
+  async function login() {
+    try {
+      await appwrite.account.createSession(
+        "EMAIL",
+        "YOUR_EMAIL",
+        "YOUR_PASSWORD"
+      );
+      isLoggedIn = true;
+    } catch (error) {
+      console.error("Login error:", error);
+    }
+  }
+
+  function logout() {
+    appwrite.account.deleteSession("current");
+    isLoggedIn = false;
+  }
 </script>
 
 <div class="container h-full mx-auto flex justify-center items-center">
-	<div class="space-y-5">
-		<h1 class="h1">ContactList</h1>
-		<p>All your contacts in one persistent state!</p>
-		<label class="label">
-			<span>Name</span>
-			<input class="input" type="text" placeholder="Name" bind:value={inputName} />
-		</label>
-		<label class="label">
-			<span>Phone Number</span>
-			<input class="input" type="text" placeholder="Phone Number" bind:value={inputPhoneNumber} />
-		</label>
-		<button type="button" class="btn variant-ghost" on:click={addContact}>Add Contact</button>
-		<hr />
-		<h2 class="h2">Your Contacts</h2>
-		{#each $contactStore as contact, index }
-			<div class="card p-2">
-				<h1>{contact.name}</h1>
-				<h1>{contact.phoneNumber}</h1>
-				<button type="button" class="btn btn-sm variant-filled-error" on:click={() => deleteContact(index)}>Delete</button>
-			</div>
-		{/each}
-	</div>
+  <div class="space-y-5">
+    <h1 class="h1">Contact List</h1>
+    <p>This is an example of a login form with Svelte and Appwrite</p>
+
+    {#if isLoggedIn}
+      <!-- Contact form -->
+      <label class="label">
+        <span>Name</span>
+        <input class="input" type="text" placeholder="Name" bind:value="{inputName}" />
+
+        <span>Phone Number</span>
+        <input class="input" type="text" placeholder="111-111-1111" bind:value="{inputPhoneNumber}" />
+      </label>
+
+      <button type="button" class="btn variant-ghost" on:click="{addContact}">Add Contact</button>
+      <hr />
+
+      <h2 class="h2">Your Contact List</h2>
+      {#each $contactStore as contact, index}
+        <div class="card p-2">
+          <h3>{contact.name}</h3>
+          <h3>{contact.phoneNumber}</h3>
+          <button type="button" class="btn variant-danger" on:click="{() => deleteContact(index)}">Delete</button>
+        </div>
+      {/each}
+
+      <button type="button" class="btn variant-ghost" on:click="{logout}">Logout</button>
+    {:else}
+      <!-- Login form -->
+      <div>
+        <label class="label">
+          <span>Email</span>
+          <input class="input" type="email" placeholder="Email" bind:value="{email}" />
+        </label>
+
+        <label class="label">
+          <span>Password</span>
+          <input class="input" type="password" placeholder="Password" bind:value="{password}" />
+        </label>
+
+        <button type="button" class="btn variant-primary" on:click="{login}">Login</button>
+      </div>
+    {/if}
+  </div>
 </div>
