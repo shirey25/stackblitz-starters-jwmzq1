@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Client, Account, ID } from "appwrite";
+  import { Client } from "appwrite";
   import { localStorageStore } from "@skeletonlabs/skeleton";
   import { writable } from "svelte/store";
 
@@ -8,31 +8,17 @@
     phoneNumber: string;
   }
 
+  const client = new Client();
+
+  client
+    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('64749decd0dbb1e27c93'); // Your project ID
+
   let inputName = "";
-	let email = "";
   let inputPhoneNumber = "";
   let isLoggedIn = false;
-	let password = "";
-
-
-const sdk = require ('appwrite');
-let client = new sdk.Client();
-client
-    setEndpoint('https://cloud.appwrite.io/v1'); // Your API Endpoint
-    setProject('64749decd0dbb1e27c93');
-    setKey('737d67b239611e525f7ff57d2d17d95b5310906971643bbfc564f223eb705434f6884f96fe4cbdcf1a79efcf2cbbd90365fd9a1a497ab0cd1220756702ae4db1cdac0731c57ccff2d7889c3e44030355bb3f6ec19be9cb7e27c92e142c5ec3e078f47f256493ca45ffb0f2d2598789875a74c76f4abc07679309482fb901d898')               // Your project ID
-
-
-
-   
-
-
-promise.then(function (response) {
-    console.log(response);
-}, function (error) {
-    console.log(error);
-});
-  
+  let email = "";
+  let password = "";
 
   const contactStore = localStorageStore<Contact[]>("contactStore", []);
 
@@ -56,21 +42,24 @@ promise.then(function (response) {
     inputPhoneNumber = "";
   }
 
-  async function login() {
+  async function loginWithGoogle() {
     try {
-      await appwrite.account.createSession(
-        "EMAIL",
-        "YOUR_EMAIL",
-        "YOUR_PASSWORD"
-      );
-      isLoggedIn = true;
+      // Redirect to Google authentication
+      await client.account.createOAuth2Session("google");
+
+      // Once the user is redirected back to your app, you can check if the session was created
+      const response = await client.account.get();
+
+      if (response.$id) {
+        isLoggedIn = true;
+      }
     } catch (error) {
       console.error("Login error:", error);
     }
   }
 
   function logout() {
-    appwrite.account.deleteSession("current");
+    client.account.deleteSession("current");
     isLoggedIn = false;
   }
 </script>
@@ -81,43 +70,33 @@ promise.then(function (response) {
     <p>This is an example of a login form with Svelte and Appwrite</p>
 
     {#if isLoggedIn}
-      <!-- Contact form -->
-      <label class="label">
-        <span>Name</span>
-        <input class="input" type="text" placeholder="Name" bind:value="{inputName}" />
+    <!-- Contact form -->
+    <label class="label">
+      <span>Name</span>
+      <input class="input" type="text" placeholder="Name" bind:value="{inputName}" />
 
-        <span>Phone Number</span>
-        <input class="input" type="text" placeholder="111-111-1111" bind:value="{inputPhoneNumber}" />
-      </label>
+      <span>Phone Number</span>
+      <input class="input" type="text" placeholder="111-111-1111" bind:value="{inputPhoneNumber}" />
+    </label>
 
-      <button type="button" class="btn variant-ghost" on:click="{addContact}">Add Contact</button>
-      <hr />
+    <button type="button" class="btn variant-ghost" on:click="{addContact}">Add Contact</button>
+    <hr />
 
-      <h2 class="h2">Your Contact List</h2>
-      {#each $contactStore as contact, index}
-        <div class="card p-2">
-          <h3>{contact.name}</h3>
-          <h3>{contact.phoneNumber}</h3>
-          <button type="button" class="btn variant-danger" on:click="{() => deleteContact(index)}">Delete</button>
-        </div>
-      {/each}
+    <h2 class="h2">Your Contact List</h2>
+    {#each $contactStore as contact, index}
+    <div class="card p-2">
+      <h3>{contact.name}</h3>
+      <h3>{contact.phoneNumber}</h3>
+      <button type="button" class="btn variant-danger" on:click="{() => deleteContact(index)}">Delete</button>
+    </div>
+    {/each}
 
-      <button type="button" class="btn variant-ghost" on:click="{logout}">Logout</button>
+    <button type="button" class="btn variant-ghost" on:click="{logout}">Logout</button>
     {:else}
-      <!-- Login form -->
-      <div>
-        <label class="label">
-          <span>Email</span>
-          <input class="input" type="email" placeholder="Email" bind:value="{email}" />
-        </label>
-
-        <label class="label">
-          <span>Password</span>
-          <input class="input" type="password" placeholder="Password" bind:value="{password}" />
-        </label>
-
-        <button type="button" class="btn variant-primary" on:click="{login}">Login</button>
-      </div>
+    <!-- Login form -->
+    <div>
+      <button type="button" class="btn variant-primary" on:click="{loginWithGoogle}">Login with Google</button>
+    </div>
     {/if}
   </div>
 </div>
