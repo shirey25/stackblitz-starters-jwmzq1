@@ -1,5 +1,4 @@
 <script lang="ts">
-
   import { localStorageStore } from "@skeletonlabs/skeleton";
   import { writable } from "svelte/store";
 
@@ -9,8 +8,50 @@
   }
 
   let inputName = "";
-  let inputPhoneNumber = "";
-  let isLoggedIn = false;
+  let inputEmail; = "";
+  let showEmailForm = false;
+  let signUpEmail = "";
+  let signUpPassword = "";
+
+  function showEmailSignUpForm() {
+    showEmailForm = true;
+  }
+
+  async function signUpWithEmail() {
+    try {
+      const { user, error } = await supabase.auth.signUp({
+        email: signUpEmail,
+        password: signUpPassword,
+      });
+
+      if (error) {
+        console.error("Sign-up error:", error);
+      } else {
+        console.log("User signed up:", user);
+        // Optionally, you can handle successful sign-up, such as showing a success message or redirecting to another page
+      }
+    } catch (error) {
+      console.error("Sign-up error:", error);
+    }
+  }
+
+  async function signInWithEmail() {
+    try {
+      const { user, error } = await supabase.auth.signIn({
+        email: signUpEmail,
+        password: signUpPassword,
+      });
+
+      if (error) {
+        console.error("Login error:", error);
+      } else {
+        console.log("User logged in:", user);
+        // Optionally, you can handle successful login, such as showing a success message or redirecting to another page
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+    }
+  }
 
   const contactStore = localStorageStore<Contact[]>("contactStore", []);
 
@@ -34,29 +75,37 @@
     inputPhoneNumber = "";
   }
 
-  
-  
+  import { createClient } from "@supabase/supabase-js";
+  import { supabaseUrl, supabaseKey } from "./config"; // Add your Supabase URL and Key in the config file
+
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  const isLoggedIn = writable(false); // Store to track login status
+
   async function signInWithGoogle() {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-  })
-      // Implement the Google Sign-In logic here
-      // You can use the Google Sign-In API or any other method of your choice
-      // Set isLoggedIn to true upon successful sign-in
+    const { user, error } = await supabase.auth.signInWithProvider("google");
+    if (error) {
+      console.error("Login error:", error);
+    } else {
+      console.log("User logged in with Google:", user);
+      isLoggedIn.set(true); // Update login status
+      // Optionally, you can handle successful login, such as showing a success message or redirecting to another page
+    }
   }
 
   function logout() {
     // Implement the logout logic here
     // Set isLoggedIn to false and clear any user data or session information
+    isLoggedIn.set(false); // Update login status
   }
 </script>
 
 <div class="container h-full mx-auto flex justify-center items-center">
   <div class="space-y-5">
     <h1 class="h1">Login to Dash -GPT</h1>
-    <p>This is an example of a login form with Svelte and Google Sign-In</p>
+    <p>This is an example of a login form with Svelte, Google Sign-In, and Email Sign-Up</p>
 
-    {#if isLoggedIn}
+    {#if $isLoggedIn}
       <!-- User is logged in -->
       <div>
         <!-- Contact form -->
@@ -64,8 +113,8 @@
           <span>Name</span>
           <input class="input" type="text" placeholder="Name" bind:value="{inputName}" />
 
-          <span>Phone Number</span>
-          <input class="input" type="text" placeholder="111-111-1111" bind:value="{inputPhoneNumber}" />
+          <span>Email Address </span>
+          <input class="input" type="email" placeholder="email@email.com" bind:value="{inputEmail}" />
         </label>
 
         <button type="button" class="btn variant-ghost" on:click="{addContact}">Add Contact</button>
@@ -75,7 +124,7 @@
         {#each $contactStore as contact, index}
           <div class="card p-2">
             <h3>{contact.name}</h3>
-            <h3>{contact.phoneNumber}</h3>
+            <h3>{contact.email}</h3>
             <button type="button" class="btn variant-danger" on:click="{() => deleteContact(index)}">Delete</button>
           </div>
         {/each}
@@ -85,8 +134,26 @@
     {:else}
       <!-- User is not logged in -->
       <div>
-        <button type="button" class="btn variant-ghost" on:click="{signInWithGoogle}">Login with Google</button>
+        <button type="button" class="btn variant-ghost" on:click="{signInWithProvider}">Login with Google</button>
+        <button type="button" class="btn variant-ghost" on:click="{showEmailSignUpForm}">Email Address</button>
       </div>
+
+      {#if showEmailForm}
+        <!-- Email sign-up form -->
+        <div>
+          <label class="label">
+            <span>Email Address</span>
+            <input class="input" type="email" placeholder="Email" bind:value="{signUpEmail}" />
+          </label>
+
+          <label class="label">
+            <span>Password</span>
+            <input class="input" type="password" placeholder="Password" bind:value="{signUpPassword}" />
+          </label>
+
+          <button type="button" class="btn variant-primary" on:click="{signUpWithEmail}">Sign Up</button>
+        </div>
+      {/if}
     {/if}
   </div>
 </div>
