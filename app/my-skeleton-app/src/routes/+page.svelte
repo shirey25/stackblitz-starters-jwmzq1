@@ -4,11 +4,10 @@
 
   interface Contact {
     name: string;
-    phoneNumber: string;
+    email: string;
   }
 
   let inputName = "";
-  let inputEmail; = "";
   let showEmailForm = false;
   let signUpEmail = "";
   let signUpPassword = "";
@@ -35,30 +34,12 @@
     }
   }
 
-  async function signInWithEmail() {
-    try {
-      const { user, error } = await supabase.auth.signIn({
-        email: signUpEmail,
-        password: signUpPassword,
-      });
-
-      if (error) {
-        console.error("Login error:", error);
-      } else {
-        console.log("User logged in:", user);
-        // Optionally, you can handle successful login, such as showing a success message or redirecting to another page
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-    }
-  }
-
   const contactStore = localStorageStore<Contact[]>("contactStore", []);
 
   function addContact() {
     const newContact: Contact = {
       name: inputName,
-      phoneNumber: inputPhoneNumber,
+      email: signUpEmail,
     };
 
     contactStore.set([newContact, ...contactStore.get()]);
@@ -113,8 +94,8 @@
           <span>Name</span>
           <input class="input" type="text" placeholder="Name" bind:value="{inputName}" />
 
-          <span>Email Address </span>
-          <input class="input" type="email" placeholder="email@email.com" bind:value="{inputEmail}" />
+          <span>Email Address</span>
+          <input class="input" type="email" placeholder="Email" bind:value="{signUpEmail}" />
         </label>
 
         <button type="button" class="btn variant-ghost" on:click="{addContact}">Add Contact</button>
@@ -134,7 +115,7 @@
     {:else}
       <!-- User is not logged in -->
       <div>
-        <button type="button" class="btn variant-ghost" on:click="{signInWithProvider}">Login with Google</button>
+        <button type="button" class="btn variant-ghost" on:click="{signInWithGoogle}">Login with Google</button>
         <button type="button" class="btn variant-ghost" on:click="{showEmailSignUpForm}">Email Address</button>
       </div>
 
