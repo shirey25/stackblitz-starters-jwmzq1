@@ -35,14 +35,14 @@
   }
 
   
-  }
+  
   async function signInWithGoogle() {
     const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
   })
-}// Implement the Google Sign-In logic here
-    // You can use the Google Sign-In API or any other method of your choice
-    // Set isLoggedIn to true upon successful sign-in
+      // Implement the Google Sign-In logic here
+      // You can use the Google Sign-In API or any other method of your choice
+      // Set isLoggedIn to true upon successful sign-in
   }
 
   function logout() {
